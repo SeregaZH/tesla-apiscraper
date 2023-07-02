@@ -1,0 +1,31 @@
+version: '2'
+
+services:
+
+  influxdb:
+    image: "influxdb:latest"
+    container_name: "influxdb_apiscraper"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=tesla
+      - DOCKER_INFLUXDB_INIT_PASSWORD=calc2.0pass
+      - DOCKER_INFLUXDB_INIT_ORG=calc2
+      - DOCKER_INFLUXDB_INIT_BUCKET=calc2
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=ZCib0owRbOLkIZrVbQsXerRlI1nvYngYSAKV0GXdhtJM1pqyzNAJbQr-vsnEjpYUSiJkynS_a8wN23s3Vb2Bbw==
+      
+    volumes:
+      - /opt/apiscraper/influxdb:/var/lib/influxdb
+
+  apiscraper:
+    container_name: apiscraper
+    build:
+      context: ../
+      dockerfile: ./containers/Dockerfile.compose
+    volumes:
+       - ./config.py:/tesla-apiscraper/config.py
+       - ./apiscraper.log:/tesla-apiscraper/apiscraper.log
+    ports:
+      - "8023:8023"
+    restart: on-failure:5
+    depends_on:
+      - influxdb

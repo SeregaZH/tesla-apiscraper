@@ -18,6 +18,8 @@
 
 """
 
+from cmath import log
+from distutils.log import info
 import json
 import logging
 import queue
@@ -27,7 +29,7 @@ import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.error import URLError
 
-from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient
 from urllib3.exceptions import HTTPError
 
 import teslajson
@@ -63,10 +65,6 @@ resume = False
 # DON'T CHANGE ANYTHING BELOW
 scraper_api_version = 2019.5
 
-influx_client = InfluxDBClient(
-    a_influx_host, a_influx_port, a_influx_user, a_influx_pass, a_influx_db)
-
-
 def setup_custom_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                                   datefmt='%Y-%m-%d %H:%M:%S')
@@ -80,9 +78,9 @@ def setup_custom_logger(name):
     custom_logger.addHandler(screen_handler)
     return custom_logger
 
+logger = setup_custom_logger('apiscraper') 
 
-logger = setup_custom_logger('apiscraper')
-
+influx_client = InfluxDBClient(url=a_influx_url, token=a_influx_token, org=a_influx_org)
 
 class StateMonitor(object):
     """ Monitor all Tesla states."""
@@ -412,8 +410,11 @@ def run_server(port, pq, cond):
 if __name__ == "__main__":
     # Create Tesla API Interface
     try:
+        logger.info("Influx connections success %s", influx_client.version())
+        logger.info(influx_client.query_api().query("buckets()"))
         state_monitor = StateMonitor(a_tesla_email, a_tesla_password)
     except Exception as exc:
+        logger.error(exc)
         sys.exit("Failed to initialize Owner API")
     main_loop_count = 0
 
