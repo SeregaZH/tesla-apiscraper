@@ -94,15 +94,22 @@ class StateMonitor(object):
                                   2: ("drive_state",),
                                   4: ("charge_state", "drive_state",)}
         self.old_values = dict([(r, {}) for r in self.requests])
+        self.email = tesla_email
 
         self.connection = teslajson.Connection(tesla_email, tesla_password)
-        self.vehicle = self.connection.vehicles[a_tesla_car_idx]
+        self.vehicle = self.__request_vehicles();   
 
+    def __request_vehicles(self):
+        vehicle = self.connection.vehicles[a_tesla_car_idx] if len(self.connection.vehicles) else None
+        if not vehicle:
+            logger.warning("Do not have vehicle for user %s", self.email)
+        return vehicle
+    
     def refresh_vehicle(self):
         # refreshes the vehicle object
         logger.info(">> self.connection.refresh_vehicle()")
         self.connection.refresh_vehicle()
-        self.vehicle = self.connection.vehicles[a_tesla_car_idx]
+        self.vehicle = self.__request_vehicles();
 
     def ongoing_activity_status(self):
         """ True if the car is not in park, or is actively charging ... """
@@ -144,6 +151,10 @@ class StateMonitor(object):
         """ end mod """
         """ Request wake up of car. """
         delay = 1
+        if not self.vehicle:
+            logger.warning("Do not have vehicle for user %s", self.email)
+            return            
+        
         while True:
             try:
                 result = self.vehicle.wake_up()["response"]
@@ -402,7 +413,7 @@ if __name__ == "__main__":
     # Create Tesla API Interface
     try:
         state_monitor = StateMonitor(a_tesla_email, a_tesla_password)
-    except:
+    except Exception as exc:
         sys.exit("Failed to initialize Owner API")
     main_loop_count = 0
 
@@ -451,7 +462,7 @@ while True:
                 state_monitor.wake_up()
                 resume = True
 
-    if disableScrape is False or car_active_state is not None:
+    if disableScrape is False and car_active_state is not None and state_monitor.vehicle is not None:
         busy_since = int(time.time())
         # We cannot be sleeping with small poll interval for sure.
         # In fact can we be sleeping at all if scraping is enabled?
@@ -463,8 +474,8 @@ while True:
         # Car woke up
         if is_asleep == 'asleep' and state_monitor.vehicle['state'] == 'online':
             poll_interval = 0
-            asleep_since = 0
-
+            asleep_since = 0     
+        
         if state_monitor.vehicle['state'] == 'asleep' and is_asleep == 'online':
             asleep_since = time.time()
 

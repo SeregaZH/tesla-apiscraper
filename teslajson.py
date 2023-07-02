@@ -86,9 +86,9 @@ class Connection(object):
         """Utility command to post data to API"""
         now = calendar.timegm(datetime.datetime.now().timetuple())
         if now > self.expiration:
-            auth = self.__open("/oauth/token", data=self.oauth)
-            self.__sethead(auth['access_token'],
-                           auth['created_at'] + auth['expires_in'] - 86400)
+            # auth = self.__open("/oauth/token", data=self.oauth)
+            # auth['access_token'], auth['created_at'] + auth['expires_in'] - 86400
+            self.__sethead('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im5ZdVZJWTJTN3gxVHRYM01KMC1QMDJad3pXQSJ9.eyJpc3MiOiJodHRwczovL2F1dGgudGVzbGEuY29tL29hdXRoMi92MyIsImF1ZCI6WyJodHRwczovL293bmVyLWFwaS50ZXNsYW1vdG9ycy5jb20vIiwiaHR0cHM6Ly9hdXRoLnRlc2xhLmNvbS9vYXV0aDIvdjMvdXNlcmluZm8iXSwiYXpwIjoib3duZXJhcGkiLCJzdWIiOiJlYThjMmE2My1iOTEyLTQyNDktYThhYy01Yjg2YjYyODU0NjAiLCJzY3AiOlsib3BlbmlkIiwiZW1haWwiLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl0sImV4cCI6MTY4ODMxNjYyNCwiaWF0IjoxNjg4Mjg3ODI0LCJvdV9jb2RlIjoiTkEiLCJhdXRoX3RpbWUiOjE2ODgyODc4MjR9.lVeF_ZDwB9KER3wDkarmqRWqA5Y17oiR0Wl46gz0WA7DuuktEPAkZx4GDVFJE5v6d8uB97inasYWKpVxP_RrXcNw7cy48NbIqQL29WBjWtY3UErgstygWzWpDMUPxHqlB2im74PW8qG5_c2d8kP7OvzNZvX_WyF05wiw5BYIJ6nMVMayuyDQVbIh-VPnJ3Ur9kMHiF3JklVwnCwCXri9c06XoEnmvDcbePOG9-8LOLmbOQexkNwS9K_fbakMiF73NF4h27Y07H9bvODMZVRXa6lONCowMndZZuaAU8zqQ0mhidUjDYk47WqXAdg_5TrdjghquKsUl6Wunzkfo2exSg')
         return self.__open("%s%s" % (self.api, command), headers=self.head, data=data)
 
     def __sethead(self, access_token, expiration=float('inf')):
@@ -125,7 +125,8 @@ class Connection(object):
             opener = build_opener()
         resp = opener.open(req)
         charset = resp.info().get('charset', 'utf-8')
-        return json.loads(resp.read().decode(charset))
+        content = resp.read().decode(charset)
+        return json.loads(content)
 
 
 class Vehicle(dict):
